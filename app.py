@@ -1,4 +1,3 @@
-import awsgi
 from flask import Flask, request, jsonify
 import boto3
 import json
@@ -7,15 +6,12 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import logging
 
-app = Flask(__name__)  # Creating an instance of the Flask class
+app = Flask(__name__) 
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Initialize the S3 client using environment variables
 s3_client = boto3.client(
     's3',
     aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -23,21 +19,21 @@ s3_client = boto3.client(
     region_name=os.getenv('REGION_NAME'),
 )
 
-# Enable CORS for the Flask app
+
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://main.d3ggcc26a7d3ei.amplifyapp.com"]}})
 
-@app.route('/')  # Decorator defines the home route
+@app.route('/')  
 def home():
     return "Hello World"
 
 @app.route('/allStudent', methods=['GET'])
 def get_users():
-    # S3 bucket details
+   
     bucket_name = os.getenv('AWS_BUCKET_NAME')
-    file_key = os.getenv('AWS_FILE_KEY') # The key of the file you want to fetch
+    file_key = os.getenv('AWS_FILE_KEY') 
 
     try:
-        # Fetch the file from S3
+        
         s3_response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
         s3_data = s3_response['Body'].read().decode('utf-8')
         user_data = json.loads(s3_data)
@@ -51,15 +47,14 @@ def get_users():
 @app.route('/student/<studentid>', methods=['GET'])
 def get_student(studentid):
     bucket_name = os.getenv('AWS_BUCKET_NAME')
-    file_key = os.getenv('AWS_FILE_KEY')   # The key of the file you want to fetch
+    file_key = os.getenv('AWS_FILE_KEY')  
 
     try:
-        # Fetch the file from S3
+        
         s3_response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
         s3_data = s3_response['Body'].read().decode('utf-8')
         data = json.loads(s3_data)
         students=data['students']
-        # Find the student with the specified ID
         student = next((stu for stu in students if stu.get('id') == studentid), None)
         
         if student:
@@ -74,5 +69,4 @@ def get_student(studentid):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)  # Running the app in debug mode
-
+    app.run(debug=True) 
